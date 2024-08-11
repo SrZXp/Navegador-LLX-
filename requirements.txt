@@ -1,0 +1,5 @@
+PyQt5==5.15.9
+PyQtWebEngine==5.15.7
+stem==1.8.0
+pysocks==1.7.1
+cryptography==39.0.1
