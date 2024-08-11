@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLX</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Preto */
+            color: #E0E0E0; /* Cinza claro */
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .logo {
+            font-size: 4rem;
+            color: #9C27B0; /* Roxo */
+            margin-bottom: 20px;
+        }
+        .search-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #333; /* Escuro */
+            border-radius: 24px;
+            padding: 10px;
+        }
+        .search-box input {
+            border: none;
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 24px;
+            outline: none;
+            width: 300px;
+        }
+        .search-box button {
+            background-color: #9C27B0; /* Roxo */
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .search-box button:hover {
+            background-color: #7B1FA2; /* Roxo mais escuro */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">LLX</div>
+        <div class="search-box">
+            <input type="text" id="search-query" placeholder="Pesquisar..." onkeypress="checkEnter(event)">
+            <button onclick="search()">Pesquisar</button>
+        </div>
+    </div>
+    <script>
+        function search() {
+            var query = document.getElementById('search-query').value;
+            if (query) {
+                window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+            }
+        }
+
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                search();
+            }
+        }
+    </script>
+</body>
+</html>
