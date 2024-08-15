@@ -2,8 +2,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtGui import *
-from stem import Signal
-from stem.control import Controller
 import socks
 import socket
 import sys
@@ -13,7 +11,7 @@ from cryptography.fernet import Fernet
 import random
 import time
 
-# Gera um negocio pra salvar uma chave de criptografia
+# Gera um negócio pra salvar uma chave de criptografia
 def generate_key():
     return Fernet.generate_key()
 
@@ -89,7 +87,7 @@ class Browser(QMainWindow):
         self.current_proxy_index = 0
         self.setup_proxy()
 
-        # Barra di navegasao
+        # Barra de navegação
         navbar = QToolBar()
         self.addToolBar(navbar)
 
@@ -115,7 +113,7 @@ class Browser(QMainWindow):
 
         self.current_browser().urlChanged.connect(lambda qurl: self.update_url(qurl))
 
-        # atalhos 
+        # Atalhos
         self.shortcut_new_tab = QShortcut(QKeySequence("Ctrl+T"), self)
         self.shortcut_new_tab.activated.connect(self.open_new_tab)
 
@@ -165,35 +163,34 @@ class Browser(QMainWindow):
         return None
 
     def setup_proxy(self):
-        # Config dos proxy
-        proxy_type, host, port = self.proxy_list[self.current_proxy_index]
-        if proxy_type == 'SOCKS5':
-            socks.set_default_proxy(socks.SOCKS5, host, port)
-        elif proxy_type == 'HTTP':
-            socks.set_default_proxy(socks.HTTP, host, port)
-        socket.socket = socks.socksocket
+        try:
+            # Config dos proxy
+            proxy_type, host, port = self.proxy_list[self.current_proxy_index]
+            if proxy_type == 'SOCKS5':
+                socks.set_default_proxy(socks.SOCKS5, host, port)
+            elif proxy_type == 'HTTP':
+                socks.set_default_proxy(socks.HTTP, host, port)
+            socket.socket = socks.socksocket
 
-        # Cria um temporizador para o tempo limite de 20 segundos
-        self.proxy_timer = QTimer()
-        self.proxy_timer.setSingleShot(True)
-        self.proxy_timer.timeout.connect(self.on_proxy_timeout)
-        self.proxy_timer.start(20000)  # 20 segundos
+            # Testar conexão com o proxy em uma thread separada
+            QTimer.singleShot(0, self.test_proxy_connection)
 
-        # Teste dos proxy em uma thread separada
-        QTimer.singleShot(0, self.test_proxy_connection)
+        except Exception as e:
+            print(f"Erro ao configurar o proxy: {e}")
+            self.on_proxy_timeout()
 
     def test_proxy_connection(self):
         try:
-            with Controller.from_port(port=9051) as controller:
-                controller.authenticate()  
-                controller.signal(Signal.NEWNYM)
-                self.proxy_timer.stop()  # Para o temporizador se a conexão for bem-sucedida
-                return True
+            # Simples teste de conexão
+            socket.create_connection((self.proxy_list[self.current_proxy_index][1], self.proxy_list[self.current_proxy_index][2]), timeout=5)
+            print(f"Conectado com sucesso ao proxy {self.proxy_list[self.current_proxy_index]}")
+            return True
         except Exception as e:
-            return False
+            print(f"Erro na conexão com o proxy: {e}")
+            self.on_proxy_timeout()
 
     def on_proxy_timeout(self):
-        print(f"Tempo limite para o proxy atingido. Tentando o próximo proxy...")
+        print(f"Tempo limite para o proxy atingido ou falha na conexão. Tentando o próximo proxy...")
         self.current_proxy_index = (self.current_proxy_index + 1) % len(self.proxy_list)
         self.setup_proxy()
 
@@ -221,7 +218,7 @@ class Browser(QMainWindow):
         if not url:
             return
 
-        # deixa isso quieto, pprt
+        # Deixa isso quieto, pprt
         if url.startswith("youtube") or url == "youtube.com":
             self.current_browser().setUrl(QUrl("https://www.youtube.com"))
         elif url.startswith("example") or url == "example.com":
@@ -238,59 +235,54 @@ class Browser(QMainWindow):
         self.url_bar.setText(qurl.toString())
 
     def open_new_tab(self, i=None):
+        if i is None:
+            i = -1
         if i == -1:
             self.add_new_tab()
 
     def close_current_tab(self, i=None):
         if self.browser.count() < 2:
             return
-
         if i is None:
             i = self.browser.currentIndex()
 
-        self.browser.widget(i).deleteLater()
         self.browser.removeTab(i)
 
     def apply_dark_theme(self):
-        app.setStyle("Fusion")
-        palette = QPalette()
-        palette.setColor(QPalette.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.WindowText, Qt.white)
-        palette.setColor(QPalette.Base, QColor(35, 35, 35))
-        palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        palette.setColor(QPalette.ToolTipBase, Qt.white)
-        palette.setColor(QPalette.ToolTipText, Qt.white)
-        palette.setColor(QPalette.Text, Qt.white)
-        palette.setColor(QPalette.Button, QColor(53, 53, 53))
-        palette.setColor(QPalette.ButtonText, Qt.white)
-        palette.setColor(QPalette.BrightText, Qt.red)
-        palette.setColor(QPalette.Link, QColor(42, 130, 218))
-        palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        palette.setColor(QPalette.HighlightedText, Qt.black)
-        app.setPalette(palette)
+        app.setStyle('Fusion')
+        dark_palette = QPalette()
+        dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.WindowText, Qt.white)
+        dark_palette.setColor(QPalette.Base, QColor(15, 15, 15))
+        dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
+        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+        dark_palette.setColor(QPalette.Text, Qt.white)
+        dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ButtonText, Qt.white)
+        dark_palette.setColor(QPalette.BrightText, Qt.red)
+        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.HighlightedText, Qt.black)
+        app.setPalette(dark_palette)
 
     def apply_dark_mode(self):
-        self.current_browser().page().runJavaScript("""
-            (function() {
-                var style = document.createElement('style');
-                style.innerHTML = `
-                    body, html {
-                        background-color: #121212 !important;
-                        color: #ffffff !important;
-                    }
-                    a {
-                        color: #bb86fc !important;
-                    }
-                    .header, .footer, .nav {
-                        background-color: #1f1f1f !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            })();
-        """)
+        self.current_browser().page().runJavaScript(''' 
+            document.body.style.backgroundColor = '#121212'; 
+            document.body.style.color = '#FFFFFF'; 
+            let elements = document.querySelectorAll('*'); 
+            elements.forEach(el => {
+                if (getComputedStyle(el).backgroundColor === 'rgb(255, 255, 255)') { 
+                    el.style.backgroundColor = '#121212'; 
+                } 
+                if (getComputedStyle(el).color === 'rgb(0, 0, 0)') { 
+                    el.style.color = '#FFFFFF'; 
+                } 
+            });
+        ''')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    QApplication.setApplicationName("LLX Browser")
+    app.setApplicationName("LLX Browser")
     window = Browser()
     app.exec_()
